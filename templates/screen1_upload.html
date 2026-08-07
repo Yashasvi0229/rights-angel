@@ -37,34 +37,18 @@
   }
   .ingest-warn strong { color: var(--yellow); }
 
-  /* Post-upload summary panel */
   .summary-panel {
-    display: none;
-    margin-top: 14px;
-    padding: 14px 16px;
-    background: rgba(46,204,113,0.05);
-    border: 1px solid rgba(46,204,113,0.25);
+    display: none; margin-top: 14px; padding: 14px 16px;
+    background: rgba(46,204,113,0.05); border: 1px solid rgba(46,204,113,0.25);
     border-radius: var(--radius-sm);
   }
-  .summary-panel.warn {
-    background: rgba(241,196,15,0.05);
-    border-color: rgba(241,196,15,0.3);
-  }
-  .summary-hdr {
-    font-weight: 700; font-size: 14px; margin-bottom: 10px;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .summary-grid {
-    display: grid; grid-template-columns: repeat(4,1fr); gap: 10px;
-    margin-bottom: 10px;
-  }
-  .summary-stat {
-    background: var(--bg-card); border: 1px solid var(--border2);
-    border-radius: 6px; padding: 8px 10px; text-align: center;
-  }
-  .summary-stat-num  { font-size: 22px; font-weight: 900; font-family: 'Frank Ruhl Libre', serif; }
-  .summary-stat-lbl  { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .summary-actions   { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .summary-panel.warn { background: rgba(241,196,15,0.05); border-color: rgba(241,196,15,0.3); }
+  .summary-hdr { font-weight: 700; font-size: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .summary-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 10px; }
+  .summary-stat { background: var(--bg-card); border: 1px solid var(--border2); border-radius: 6px; padding: 8px 10px; text-align: center; }
+  .summary-stat-num { font-size: 22px; font-weight: 900; font-family: 'Frank Ruhl Libre', serif; }
+  .summary-stat-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .summary-actions  { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 
   .type-grid {
     display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px;
@@ -76,9 +60,7 @@
     font-size: 12px; cursor: pointer; text-align: center;
     transition: all 0.2s; font-family: 'Heebo', sans-serif;
   }
-  .type-btn:hover, .type-btn.active {
-    border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,0.08);
-  }
+  .type-btn:hover, .type-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,0.08); }
   .type-icon { font-size: 18px; display: block; margin-bottom: 4px; }
 
   .progress-bar { width:100%; height:4px; background:var(--bg-navy); border-radius:2px; overflow:hidden; margin-top:8px; display:none; }
@@ -114,6 +96,13 @@
 
   .form-input.input-error { border-color: var(--red) !important; }
   .date-error-msg { color: var(--red); font-size: 12px; margin-top: 4px; display: none; }
+
+  /* Ready indicator for custom source panel */
+  .ready-indicator {
+    display: none; padding: 6px 10px; margin-top: 8px;
+    background: rgba(46,204,113,0.08); border: 1px solid rgba(46,204,113,0.25);
+    border-radius: 6px; font-size: 12px; color: var(--green);
+  }
 
   .custom-source-panel {
     display: none; margin-top: 12px; padding: 14px;
@@ -203,7 +192,7 @@
           <div class="card-title">📤 העלה מסמך חדש</div>
           <div id="alert-box" class="alert"></div>
 
-          <!-- ★ NEW: Post-upload summary panel -->
+          <!-- Post-upload summary panel -->
           <div id="summary-panel" class="summary-panel">
             <div class="summary-hdr" id="summary-hdr"></div>
             <div class="summary-grid" id="summary-grid"></div>
@@ -275,6 +264,7 @@
             <div class="field-hint">💡 ניתן לבחור מהרשימה או להוסיף מקור חדש עם פרטים ידניים.</div>
           </div>
 
+          <!-- Custom source panel -->
           <div id="custom-source-panel" class="custom-source-panel">
             <div class="custom-source-hdr">📝 פרטי מקור חדש</div>
             <div class="form-group">
@@ -282,20 +272,21 @@
               <input class="form-input" id="custom-doc-id"
                      placeholder="GOV-IL-EXAMPLE-2026"
                      style="direction:ltr; text-align:left;"
-                     oninput="_tryAutoUpload()" />
+                     oninput="_checkCustomReady()" />
               <div class="field-hint">מזהה ייחודי באנגלית — אותיות, ספרות ומקפים בלבד</div>
             </div>
             <div class="form-group">
               <label class="form-label">שם המסמך (כותרת) *</label>
               <input class="form-input" id="custom-title"
                      placeholder="שם החוק / התקנה / פסק הדין"
-                     oninput="_tryAutoUpload()" />
+                     oninput="_checkCustomReady()" />
             </div>
             <div class="form-group">
               <label class="form-label">מפרסם *</label>
+              <!-- ★ FIX: removed oninput="_tryAutoUpload()" — caused premature upload while typing -->
               <input class="form-input" id="custom-publisher"
                      placeholder="e.g. משרד הפנים / כנסת ישראל / בית המשפט העליון"
-                     oninput="_tryAutoUpload()" />
+                     oninput="_checkCustomReady()" />
             </div>
             <div class="form-group">
               <label class="form-label">קטגוריה</label>
@@ -311,6 +302,10 @@
                 <option value="education">חינוך</option>
                 <option value="other">אחר</option>
               </select>
+            </div>
+            <!-- ★ NEW: Ready indicator — shows when all 3 fields complete + file selected -->
+            <div id="ready-indicator" class="ready-indicator">
+              ✅ כל הפרטים מולאו — לחץ "העלה מסמך" להתחלת העיבוד
             </div>
           </div>
 
@@ -347,11 +342,8 @@
           <div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:8px">
             ⏱ העלאה עשויה לקחת 20-30 שניות
           </div>
-          <button class="btn btn-gold" style="width:100%;opacity:0.7" id="upload-btn"
-                  onclick="uploadDocument()">⬆ העלה מסמך ידנית</button>
-          <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px">
-            ⚡ ההעלאה תתחיל אוטומטית כשכל השדות ימולאו
-          </div>
+          <button class="btn btn-gold" style="width:100%" id="upload-btn"
+                  onclick="uploadDocument()">⬆ העלה מסמך</button>
         </div>
       </div>
 
@@ -431,6 +423,11 @@
 let selectedFile = null;
 let selectedType = 'חוק';
 
+// ★ FIX: Guard flag — prevents auto-upload from firing while user is still typing
+// Auto-upload is DISABLED for custom sources. User must click the button manually.
+// For known sources (dropdown), auto-upload still works once file is selected.
+let _customFieldsComplete = false;
+
 const REASON_HE = {
   'OPENAI_API_KEY_MISSING':  'מפתח OpenAI חסר — הגדר .env',
   'OPENAI_API_ERROR':        'שגיאה מ-OpenAI',
@@ -446,6 +443,19 @@ function reasonLabel(code) {
   return REASON_HE[code] || code;
 }
 
+// ★ FIX: _checkCustomReady — only shows "ready" indicator, never auto-uploads
+// This replaces the old _tryAutoUpload() calls on custom fields
+function _checkCustomReady() {
+  const cid   = (document.getElementById('custom-doc-id')?.value   || '').trim();
+  const title = (document.getElementById('custom-title')?.value    || '').trim();
+  const pub   = (document.getElementById('custom-publisher')?.value || '').trim();
+  _customFieldsComplete = !!(cid && title && pub);
+  const indicator = document.getElementById('ready-indicator');
+  if (indicator) {
+    indicator.style.display = (_customFieldsComplete && selectedFile) ? 'block' : 'none';
+  }
+}
+
 function onSourceSelect(sel) {
   const isNew = sel.value === '__NEW__';
   const panel = document.getElementById('custom-source-panel');
@@ -454,7 +464,8 @@ function onSourceSelect(sel) {
   if (isNew) {
     document.getElementById('zone-title').textContent = 'מקור חדש — הזן פרטים למטה';
     document.getElementById('zone-title').style.fontSize = '15px';
-    _tryAutoUpload();
+    // ★ FIX: Do NOT call _tryAutoUpload() here — user hasn't filled fields yet
+    _checkCustomReady();
     return;
   }
 
@@ -478,6 +489,7 @@ function onSourceSelect(sel) {
     document.getElementById('zone-title').textContent = 'גרור קובץ לכאן';
     document.getElementById('zone-title').style.fontSize = '';
   }
+  // Known source selected + file already picked → auto-upload
   _tryAutoUpload();
 }
 
@@ -491,6 +503,7 @@ function onFileSelected(input) {
   if (input.files && input.files[0]) {
     selectedFile = input.files[0];
     document.getElementById('zone-sub').textContent = selectedFile.name + ' · ' + (selectedFile.size/1024/1024).toFixed(2) + ' MB';
+    _checkCustomReady();
     _tryAutoUpload();
   }
 }
@@ -502,21 +515,18 @@ function onDrop(e) {
   if (f) {
     selectedFile = f;
     document.getElementById('zone-sub').textContent = f.name + ' · ' + (f.size/1024/1024).toFixed(2) + ' MB';
+    _checkCustomReady();
     _tryAutoUpload();
   }
 }
 
+// ★ FIX: _tryAutoUpload — only fires for KNOWN sources (dropdown selection)
+// Custom sources (__NEW__) are NEVER auto-uploaded — user must click the button
 function _tryAutoUpload() {
   const docSel = document.getElementById('doc-id-select');
   if (!selectedFile || !docSel.value) return;
-  if (docSel.value === '__NEW__') {
-    const cid   = document.getElementById('custom-doc-id').value.trim();
-    const title = document.getElementById('custom-title').value.trim();
-    const pub   = document.getElementById('custom-publisher').value.trim();
-    if (!cid || !title || !pub) return;
-    setTimeout(() => uploadDocument(), 400);
-    return;
-  }
+  // ★ KEY FIX: block auto-upload for custom sources entirely
+  if (docSel.value === '__NEW__') return;
   setTimeout(() => uploadDocument(), 400);
 }
 
@@ -573,7 +583,7 @@ function showDocModal(docId, title, publisher, pubDate, hash, status, ingested, 
     ? '<span class="badge badge-green">✔ פעיל</span>'
     : '<span class="badge badge-yellow">⏳ ' + status + '</span>';
 
-  const ingestRow = document.getElementById('m-ingest-row');
+  const ingestRow  = document.getElementById('m-ingest-row');
   const ingestCell = document.getElementById('m-ingest');
   if (ingestEvent) {
     ingestRow.style.display = '';
@@ -625,11 +635,10 @@ function showAlert(msg, type) {
 function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function escAttr(s) { return escHtml(s).replace(/'/g,'&#39;'); }
 
-// ★ NEW: Show post-upload summary panel from /api/documents/{doc_id}/summary
 async function showUploadSummary(docId, clauseCount) {
-  const panel = document.getElementById('summary-panel');
-  const hdr   = document.getElementById('summary-hdr');
-  const grid  = document.getElementById('summary-grid');
+  const panel     = document.getElementById('summary-panel');
+  const hdr       = document.getElementById('summary-hdr');
+  const grid      = document.getElementById('summary-grid');
   const contraDiv = document.getElementById('summary-contradictions');
   const expertDiv = document.getElementById('summary-expert-q');
   const actDiv    = document.getElementById('summary-actions');
@@ -637,16 +646,14 @@ async function showUploadSummary(docId, clauseCount) {
   if (clauseCount === 0) {
     panel.className = 'summary-panel warn';
     hdr.innerHTML = '⚠️ <span style="color:var(--yellow)">0 סעיפים חולצו — הסיבה מופיעה למטה</span>';
-    grid.innerHTML = '';
-    contraDiv.innerHTML = '';
-    expertDiv.innerHTML = '';
+    grid.innerHTML = ''; contraDiv.innerHTML = ''; expertDiv.innerHTML = '';
     actDiv.innerHTML = `<a href="/screen9" class="btn btn-outline" style="font-size:12px">📋 יומן ביקורת</a>`;
     panel.style.display = 'block';
     return;
   }
 
   try {
-    const res  = await fetch(`/api/documents/${encodeURIComponent(docId)}/summary`);
+    const res = await fetch(`/api/documents/${encodeURIComponent(docId)}/summary`);
     if (!res.ok) return;
     const s = await res.json();
 
@@ -662,43 +669,22 @@ async function showUploadSummary(docId, clauseCount) {
 
     panel.className = 'summary-panel';
     hdr.innerHTML = `✅ <span style="color:var(--green); font-weight:700">${total} סעיפים חולצו בהצלחה מ-${escHtml(s.title || docId)}</span>`;
-
     grid.innerHTML = `
-      <div class="summary-stat">
-        <div class="summary-stat-num" style="color:var(--green)">${elig}</div>
-        <div class="summary-stat-lbl">✔ תנאי זכאות</div>
-      </div>
-      <div class="summary-stat">
-        <div class="summary-stat-num" style="color:var(--red)">${excl}</div>
-        <div class="summary-stat-lbl">🚫 חריגים</div>
-      </div>
-      <div class="summary-stat">
-        <div class="summary-stat-num" style="color:var(--blue-acc)">${defn}</div>
-        <div class="summary-stat-lbl">📖 הגדרות</div>
-      </div>
-      <div class="summary-stat">
-        <div class="summary-stat-num" style="color:var(--yellow)">${proc}</div>
-        <div class="summary-stat-lbl">📋 הליכים</div>
-      </div>`;
-
+      <div class="summary-stat"><div class="summary-stat-num" style="color:var(--green)">${elig}</div><div class="summary-stat-lbl">✔ תנאי זכאות</div></div>
+      <div class="summary-stat"><div class="summary-stat-num" style="color:var(--red)">${excl}</div><div class="summary-stat-lbl">🚫 חריגים</div></div>
+      <div class="summary-stat"><div class="summary-stat-num" style="color:var(--blue-acc)">${defn}</div><div class="summary-stat-lbl">📖 הגדרות</div></div>
+      <div class="summary-stat"><div class="summary-stat-num" style="color:var(--yellow)">${proc}</div><div class="summary-stat-lbl">📋 הליכים</div></div>`;
     contraDiv.innerHTML = contradictions > 0
-      ? `<div style="margin-top:8px; padding:8px 10px; background:rgba(231,140,60,0.08); border:1px solid rgba(231,140,60,0.3); border-radius:6px; font-size:12px; color:#e88c3c;">🔀 ${contradictions} ניגודים זוהו — בדוק ב<a href="/screen4" style="color:#e88c3c; text-decoration:underline">אימות עצמי</a></div>`
-      : '';
-
+      ? `<div style="margin-top:8px;padding:8px 10px;background:rgba(231,140,60,0.08);border:1px solid rgba(231,140,60,0.3);border-radius:6px;font-size:12px;color:#e88c3c;">🔀 ${contradictions} ניגודים זוהו — בדוק ב<a href="/screen4" style="color:#e88c3c;text-decoration:underline">אימות עצמי</a></div>` : '';
     expertDiv.innerHTML = expertQ > 0
-      ? `<div style="margin-top:6px; padding:8px 10px; background:rgba(74,158,221,0.08); border:1px solid rgba(74,158,221,0.3); border-radius:6px; font-size:12px; color:var(--blue-acc);">❓ ${expertQ} שאלות למומחה נוצרו — <a href="/screen14" style="color:var(--blue-acc); text-decoration:underline">צפה בשאלות</a></div>`
-      : '';
-
+      ? `<div style="margin-top:6px;padding:8px 10px;background:rgba(74,158,221,0.08);border:1px solid rgba(74,158,221,0.3);border-radius:6px;font-size:12px;color:var(--blue-acc);">❓ ${expertQ} שאלות למומחה נוצרו — <a href="/screen14" style="color:var(--blue-acc);text-decoration:underline">צפה בשאלות</a></div>` : '';
     actDiv.innerHTML = `
       <a href="/screen2" class="btn btn-outline" style="font-size:12px">⚙️ פירוק סעיפים</a>
       <a href="/screen6" class="btn btn-outline" style="font-size:12px">👤 אישור מומחה</a>
       <a href="/screen4" class="btn btn-outline" style="font-size:12px">✅ אימות</a>`;
-
     panel.style.display = 'block';
     panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  } catch(e) {
-    // silent — summary is a bonus, not blocking
-  }
+  } catch(e) { /* silent */ }
 }
 
 async function uploadDocument() {
@@ -753,32 +739,23 @@ async function uploadDocument() {
     if (res.ok) {
       const box = document.getElementById('alert-box');
       const zeroClauses = data.status === 'NO_CLAUSES_EXTRACTED' || data.clause_count === 0;
-
       if (zeroClauses) {
         const rHe = reasonLabel(data.failure_reason);
         box.className = 'alert alert-warning';
         box.innerHTML = `⚠️ המסמך הועלה אך <strong>0 סעיפים חולצו</strong><br>
-          <div style="margin-top:8px; font-size:12px">
-            סיבה: <strong>${escHtml(rHe)}</strong>
-            ${data.failure_detail ? `<div style="font-family:monospace;color:var(--muted);margin-top:4px">${escHtml(data.failure_detail)}</div>` : ''}
-          </div>
-          <div style="margin-top:10px; padding:10px 14px; background:rgba(241,196,15,0.08); border:1px solid rgba(241,196,15,0.3); border-radius:6px; font-size:13px; color:var(--yellow);">
-            💡 בדוק את הקובץ — יתכן שהטקסט קצר, שהמפתח חסר, או שהתקבלה שגיאה מ-OpenAI. פרטים ב<a href="/screen9" style="color:var(--yellow);text-decoration:underline">יומן ביקורת</a>.
-          </div>`;
+          <div style="margin-top:8px;font-size:12px">סיבה: <strong>${escHtml(rHe)}</strong>${data.failure_detail?`<div style="font-family:monospace;color:var(--muted);margin-top:4px">${escHtml(data.failure_detail)}</div>`:''}</div>
+          <div style="margin-top:10px;padding:10px 14px;background:rgba(241,196,15,0.08);border:1px solid rgba(241,196,15,0.3);border-radius:6px;font-size:13px;color:var(--yellow);">
+            💡 בדוק את הקובץ — יתכן שהטקסט קצר, שהמפתח חסר, או שהתקבלה שגיאה מ-OpenAI. פרטים ב<a href="/screen9" style="color:var(--yellow);text-decoration:underline">יומן ביקורת</a>.</div>`;
       } else {
         box.className = 'alert alert-success';
         box.innerHTML = `✅ ${data.clause_count} סעיפים חולצו בהצלחה!<br>
-          <div style="margin-top:10px; padding:10px 14px; background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.4); border-radius:6px; font-size:13px; color:var(--gold);">
-            ⚡ <strong>השלב הבא:</strong> עבור ל<a href="/screen6" style="color:var(--gold);text-decoration:underline;font-weight:700;">שלב 6 — אישור מומחה</a> כדי לאשר את הסעיפים שחולצו.
-          </div>`;
+          <div style="margin-top:10px;padding:10px 14px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.4);border-radius:6px;font-size:13px;color:var(--gold);">
+            ⚡ <strong>השלב הבא:</strong> עבור ל<a href="/screen6" style="color:var(--gold);text-decoration:underline;font-weight:700;">שלב 6 — אישור מומחה</a> כדי לאשר את הסעיפים שחולצו.</div>`;
       }
       box.style.display = 'block';
       box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-      // ★ NEW: Show post-upload summary panel
       await showUploadSummary(docId, data.clause_count || 0);
       await refreshDocumentsList();
-
     } else if (res.status === 409) {
       showAlert('⚠️ ' + (data.detail || 'המסמך לא השתנה — העלה גרסה עדכנית'), 'warning');
     } else if (res.status === 400) {
@@ -806,7 +783,6 @@ async function refreshDocumentsList() {
       docs = await res2.json();
     } catch(e2) { return; }
   }
-
   document.getElementById('doc-count').textContent = docs.length;
   document.getElementById('documents-list').innerHTML = docs.map(d => renderDocRow(d)).join('');
 }
@@ -815,29 +791,21 @@ function renderDocRow(d) {
   const isSeed     = d.ingested_by === 'system-seed';
   const zeroClause = d.latest_ingestion_event === 'INGEST_ZERO_CLAUSES';
   const rHe        = reasonLabel(d.latest_ingestion_reason);
-
   const badge = isSeed
     ? '<span class="badge" style="background:rgba(255,255,255,0.07);color:var(--muted);border:1px solid var(--border2);">📦 נתוני בסיס</span>'
     : (zeroClause
-        ? `<span class="badge badge-yellow" title="${escAttr(d.latest_ingestion_detail || '')}">⚠️ 0 סעיפים</span>`
-        : '<span class="badge ' + (d.status==='ACTIVE'?'badge-green':'badge-yellow') + '">' +
-          (d.status==='ACTIVE'?'✔ מנותח':'⏳ ' + d.status) + '</span>');
-
+        ? `<span class="badge badge-yellow" title="${escAttr(d.latest_ingestion_detail||'')}">⚠️ 0 סעיפים</span>`
+        : '<span class="badge '+(d.status==='ACTIVE'?'badge-green':'badge-yellow')+'">'+(d.status==='ACTIVE'?'✔ מנותח':'⏳ '+d.status)+'</span>');
   const zeroClauseWarn = (zeroClause && !isSeed)
-    ? `<div class="ingest-warn">⚠️ <strong>0 סעיפים חולצו</strong> — סיבה: ${escHtml(rHe)}${d.latest_ingestion_detail ? ` · <span style="font-family:monospace">${escHtml((d.latest_ingestion_detail||'').slice(0,80))}</span>` : ''}</div>`
-    : '';
-
-  const ingestedAt = (d.ingested_at || '').slice(0, 10) + ' ' + (d.ingested_at || '').slice(11, 16);
-  const shaShort   = (d.file_hash || '').slice(0, 6);
-
+    ? `<div class="ingest-warn">⚠️ <strong>0 סעיפים חולצו</strong> — סיבה: ${escHtml(rHe)}${d.latest_ingestion_detail?` · <span style="font-family:monospace">${escHtml((d.latest_ingestion_detail||'').slice(0,80))}</span>`:''}</div>` : '';
+  const ingestedAt = (d.ingested_at||'').slice(0,10)+' '+(d.ingested_at||'').slice(11,16);
+  const shaShort   = (d.file_hash||'').slice(0,6);
   return `
     <div class="source-row">
       <div class="source-icon">📜</div>
       <div class="source-info">
-        <div class="source-name">${escHtml(d.title || '')}</div>
-        <div class="source-meta" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-          ${escHtml(d.publisher || '')} · ${escHtml(ingestedAt)} · SHA: ${escHtml(shaShort)}...
-        </div>
+        <div class="source-name">${escHtml(d.title||'')}</div>
+        <div class="source-meta" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(d.publisher||'')} · ${escHtml(ingestedAt)} · SHA: ${escHtml(shaShort)}...</div>
         ${zeroClauseWarn}
       </div>
       ${badge}
