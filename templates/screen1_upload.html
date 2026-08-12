@@ -270,10 +270,9 @@
             <div class="form-group">
               <label class="form-label">מזהה מסמך חדש (doc_id) *</label>
               <input class="form-input" id="custom-doc-id"
-                     placeholder="GOV-IL-EXAMPLE-2026"
-                     style="direction:ltr; text-align:left;"
+                     placeholder="למשל: עולים-2026 או GOV-IL-OLIM-2026"
                      oninput="_checkCustomReady()" />
-              <div class="field-hint">מזהה ייחודי באנגלית — אותיות, ספרות ומקפים בלבד</div>
+              <div class="field-hint">מזהה ייחודי — עברית, אנגלית, ספרות ומקפים. למשל: עולים-2026, סל-קליטה-2026</div>
             </div>
             <div class="form-group">
               <label class="form-label">שם המסמך (כותרת) *</label>
@@ -703,8 +702,8 @@ async function uploadDocument() {
     if (!docId)           return showAlert('אנא הזן מזהה מסמך חדש', 'error');
     if (!customTitle)     return showAlert('אנא הזן שם מסמך', 'error');
     if (!customPublisher) return showAlert('אנא הזן מפרסם', 'error');
-    if (!/^[A-Za-z0-9\-_]+$/.test(docId))
-      return showAlert('מזהה מסמך חייב להיות באנגלית — אותיות, ספרות ומקפים בלבד', 'error');
+    if (!/^[\u0590-\u05FF\uFB1D-\uFB4EA-Za-z0-9\-_.]+$/.test(docId))
+      return showAlert('מזהה מסמך אינו תקין — אותיות (עברית/אנגלית), ספרות, מקפים ונקודות בלבד', 'error');
   } else {
     docId = docSel.value;
     if (!docId) return showAlert('אנא בחר מזהה מסמך', 'error');
