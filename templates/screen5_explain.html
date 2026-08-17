@@ -563,6 +563,53 @@ function onDemoTypeChange() {
 
 document.addEventListener('DOMContentLoaded', async () => {
   await loadCatalogDefaults();
+
+  // ── Domain detection: hide reserve demo for non-reserve domains ──────────
+  try {
+    const docsRes  = await fetch('/api/documents/status');
+    const docs     = await docsRes.json();
+    const activeDocs = (docs || []).filter(d =>
+      d.status === 'ACTIVE' && d.ingested_by !== 'system-seed'
+    );
+    if (activeDocs.length > 0) {
+      const nonReserve = activeDocs.filter(d => {
+        const id  = (d.doc_id  || '').toUpperCase();
+        const cat = (d.category || d.publisher || '').toUpperCase();
+        return !id.includes('RESERVE') && !id.includes('ARNONA') &&
+               !id.includes('MILUA') && !cat.includes('RESERVE') &&
+               !cat.includes('MILU');
+      });
+      if (nonReserve.length > 0) {
+        // Hide reserve-specific demo panel, show domain notice instead
+        const demoPanel = document.querySelector('.demo-panel');
+        if (demoPanel) {
+          demoPanel.innerHTML = `
+            <h4>🧪 הרץ דוגמה חיה</h4>
+            <div style="
+              padding: 16px 14px;
+              background: rgba(74,158,221,0.07);
+              border: 1px solid rgba(74,158,221,0.2);
+              border-radius: 8px;
+              font-size: 13px;
+              color: var(--muted);
+              text-align: center;
+              line-height: 1.7;
+            ">
+              <div style="font-size:20px;margin-bottom:8px">📋</div>
+              <div style="color:var(--white);font-weight:600;margin-bottom:6px">
+                הדגמה ספציפית לתחום זה תהיה זמינה ב-Milestone 3
+              </div>
+              <div style="font-size:12px">
+                כלי ההדגמה מוגדר כרגע עבור תחום ארנונה למילואים בלבד.<br>
+                לבדיקת זכאות בתחום שהועלה, עבור ל<a href="/screen10" style="color:var(--blue-acc)">מסך איסוף עובדות</a>.
+              </div>
+            </div>`;
+        }
+        return; // skip runDemo()
+      }
+    }
+  } catch(e) { /* fallback — run demo normally */ }
+
   runDemo();
 });
 </script>
