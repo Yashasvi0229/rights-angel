@@ -472,22 +472,69 @@ document.addEventListener('DOMContentLoaded', () => {
 async function loadSimulations() {
   const container = document.getElementById('sim-rows-container');
   try {
+    // ── Detect active domain from documents list ──────────────────────────
+    // If ALL active non-seed docs are reserve domain → show reserve simulations
+    // Otherwise → show generic "not applicable" message for this domain
+    let isReserveDomain = true;
+    try {
+      const docsRes = await fetch('/api/documents/status');
+      const docs    = await docsRes.json();
+      const activeDocs = (docs || []).filter(d =>
+        d.status === 'ACTIVE' && d.ingested_by !== 'system-seed'
+      );
+      if (activeDocs.length > 0) {
+        // Check if any active doc is NOT reserve domain
+        const nonReserve = activeDocs.filter(d => {
+          const id  = (d.doc_id  || '').toUpperCase();
+          const cat = (d.category || d.publisher || '').toUpperCase();
+          return !id.includes('RESERVE') && !id.includes('ARNONA') &&
+                 !id.includes('MILUA') && !cat.includes('RESERVE') &&
+                 !cat.includes('MILU');
+        });
+        if (nonReserve.length > 0) {
+          isReserveDomain = false;
+        }
+      }
+    } catch(e) { /* fallback to reserve */ }
+
+    // ── Non-reserve domain → show informational message ───────────────────
+    if (!isReserveDomain) {
+      container.innerHTML = `
+        <div style="
+          padding: 16px 14px;
+          background: rgba(74,158,221,0.07);
+          border: 1px solid rgba(74,158,221,0.2);
+          border-radius: 8px;
+          font-size: 13px;
+          color: var(--muted);
+          text-align: center;
+          line-height: 1.7;
+        ">
+          <div style="font-size:20px;margin-bottom:8px">📋</div>
+          <div style="color:var(--white);font-weight:600;margin-bottom:6px">
+            סימולציות ספציפיות לתחום זה יהיו זמינות ב-Milestone 3
+          </div>
+          <div style="font-size:12px">
+            הסימולציות הדוגמה מוגדרות כרגע עבור תחום ארנונה למילואים בלבד.<br>
+            לתחום שהועלה, ניתן לבדוק זכאות דרך <a href="/screen10" style="color:var(--blue-acc)">מסך איסוף עובדות</a>.
+          </div>
+        </div>`;
+      return;
+    }
+
+    // ── Reserve domain → show arnona simulations ──────────────────────────
     const res  = await fetch('/api/rights-defaults');
     const data = await res.json();
-    const sp   = data.soldier_pct   || 5;    // soldier %
-    const cp   = data.commander_pct || 25;   // commander %
-    const cap  = 120;                        // Amendment 42: 120 sqm cap
+    const sp   = data.soldier_pct   || 5;
+    const cp   = data.commander_pct || 25;
+    const cap  = 120;
 
-    // Simulation 1: Soldier — 6000₪, 75 sqm
     const s1tax = 6000, s1disc = Math.round(s1tax * sp / 100);
-    // Simulation 2: Commander — 8000₪, 100 sqm (≤ cap)
     const s2tax = 8000, s2disc = Math.round(s2tax * cp / 100);
-    // Simulation 3: Commander — 12000₪, 150 sqm (> cap → prorated)
     const s3tax = 12000, s3sqm = 150;
     const s3taxable = Math.min(s3sqm, cap);
     const s3tariff  = s3tax / s3sqm;
     const s3disc    = Math.round(s3taxable * s3tariff * cp / 100);
-    // Simulation 4: No municipality approval → 0
     const s4tax = 8000;
 
     container.innerHTML = `
