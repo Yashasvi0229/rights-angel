@@ -487,21 +487,82 @@ async function loadEngineData() {
     const mapContainer = document.getElementById('rule-map');
     const clauseSelect = document.getElementById('uncertainty-select');
 
-    if (!rights.length) {
-      mapContainer.innerHTML = '<div style="color:var(--muted);font-size:13px">אין זכויות בקטלוג</div>';
+    // ── M2 fix: show only rights linked to clauses from uploaded (non-seed) docs ──
+    // Fetch uploaded docs to detect active non-seed domain
+    let relevantRights = [];
+    let isReserveDomain = true;
+    try {
+      const docsRes    = await fetch('/api/documents/status');
+      const docs       = await docsRes.json();
+      const uploadedDocs = (docs || []).filter(d =>
+        d.status === 'ACTIVE' && d.ingested_by !== 'system-seed'
+      );
+      if (uploadedDocs.length > 0) {
+        const nonReserve = uploadedDocs.filter(d => {
+          const id  = (d.doc_id  || '').toUpperCase();
+          const cat = (d.category || d.publisher || '').toUpperCase();
+          return !id.includes('RESERVE') && !id.includes('ARNONA') &&
+                 !id.includes('MILUA') && !cat.includes('RESERVE');
+        });
+        if (nonReserve.length > 0) {
+          isReserveDomain = false;
+          // Fetch clauses for these docs to find linked rights
+          const clausesRes = await fetch('/api/clauses');
+          const clauses    = await clausesRes.json();
+          const uploadedDocIds = new Set(nonReserve.map(d => d.doc_id));
+          const uploadedClauseIds = new Set(
+            (clauses || [])
+              .filter(c => uploadedDocIds.has(c.source_doc_id))
+              .map(c => c.clause_id)
+          );
+          // Keep only rights that have at least 1 clause from uploaded docs
+          // If none found (clauses not approved yet) → show informational message
+          relevantRights = rights.filter(r =>
+            (r.linked_clauses || []).some(cl => uploadedClauseIds.has(cl.clause_id))
+          );
+        }
+      }
+    } catch(e) { /* fallback to reserve */ }
+
+    if (!isReserveDomain && relevantRights.length === 0) {
+      // Non-reserve domain but no approved clauses linked yet
+      mapContainer.innerHTML = `
+        <div style="
+          padding:14px 12px;
+          background:rgba(74,158,221,0.07);
+          border:1px solid rgba(74,158,221,0.2);
+          border-radius:8px; font-size:13px;
+          color:var(--muted); text-align:center; line-height:1.7;
+        ">
+          <div style="font-size:18px;margin-bottom:6px">📋</div>
+          <div style="color:var(--white);font-weight:600;margin-bottom:4px">
+            אין מיפויים לתחום זה עדיין
+          </div>
+          <div style="font-size:12px">
+            אשר סעיפים מהמסמך שהועלה כדי לראות מיפוי כלל → מקור עבור תחום זה.
+          </div>
+        </div>`;
     } else {
-      mapContainer.innerHTML = rights.slice(0,6).map((r,i) => `
-        <div class="rule-map-row">
-          <span class="badge badge-gold" style="font-size:11px;flex-shrink:0">RULE-${String(i+1).padStart(3,'0')}</span>
-          <span class="arrow">→</span>
-          <span class="badge badge-blue" style="font-size:11px;flex-shrink:0">${escHtml(r.catalog_id.slice(-6))}</span>
-          <span class="arrow">→</span>
-          <span style="font-size:12px;color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(r.name)}</span>
-          <span class="badge ${r.discount_value>=25?'badge-yellow':'badge-green'}" style="font-size:11px;flex-shrink:0">${r.discount_value}%</span>
-        </div>`).join('');
+      // Show relevant rights (or reserve rights if reserve domain)
+      const displayRights = isReserveDomain ? rights.slice(0, 6) : relevantRights.slice(0, 6);
+      if (!displayRights.length) {
+        mapContainer.innerHTML = '<div style="color:var(--muted);font-size:13px">אין זכויות בקטלוג</div>';
+      } else {
+        mapContainer.innerHTML = displayRights.map((r, i) => `
+          <div class="rule-map-row">
+            <span class="badge badge-gold" style="font-size:11px;flex-shrink:0">RULE-${String(i+1).padStart(3,'0')}</span>
+            <span class="arrow">→</span>
+            <span class="badge badge-blue" style="font-size:11px;flex-shrink:0">${escHtml(r.catalog_id.slice(-6))}</span>
+            <span class="arrow">→</span>
+            <span style="font-size:12px;color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(r.name)}</span>
+            <span class="badge ${r.discount_value>=25?'badge-yellow':'badge-green'}" style="font-size:11px;flex-shrink:0">${r.discount_value}%</span>
+          </div>`).join('');
+      }
     }
 
-    rights.forEach(r => {
+    // Populate clause select — only relevant rights for non-reserve
+    const selectRights = isReserveDomain ? rights : relevantRights;
+    selectRights.forEach(r => {
       const opt = document.createElement('option');
       opt.value = r.catalog_id; opt.textContent = `${r.catalog_id} — ${r.name}`;
       clauseSelect.appendChild(opt);
